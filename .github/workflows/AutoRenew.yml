@@ -57,13 +57,16 @@ jobs:
           INFO_SUMMARY=$(tail -n 5 renew.log | sed 's/"//g')
         fi
         
-        # 4. 组合最终发送的文本
-        MSG_TEXT="${TITLE}
+        # 4. 组合最终发送的文本（使用更安全的标准换行拼接方式）
+        MSG_TEXT=$(cat <<EOF
+        ${TITLE}
         
-    🔗 详情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        🔗 详情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         
-    📊 服务器最新状态:
-    ${INFO_SUMMARY}"
+        📊 服务器最新状态:
+        ${INFO_SUMMARY}
+        EOF
+        )
         
         # 5. 发送请求给 TG 机器人
         curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
