@@ -193,11 +193,11 @@ def run_auto_renew():
     except Exception as e:
         log(f"⚠️ 刷新最终详情时发生非致命异常: {e}")
 
-    # 4. 打印最终完美闭环结果并推送
+    # 4. 打印最终完美闭环结果并推送（!!! 此处已将冒号两边修改为与 yml 精准匹配 !!!）
     log("🎉【全链路全自动续期成功】-----------------------")
-    log(f" 服务器名称: {server_name}")
-    log(f" 当前状态  : {server_status}")
-    log(f" 新到期时间: {expires_at}")
+    print(f"服务器名称: {server_name}")
+    print(f"当前状态: {server_status}")
+    print(f"到期时间: {expires_at}")
     log("--------------------------------------------------")
     
     notify(
