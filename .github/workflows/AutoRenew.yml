@@ -57,7 +57,7 @@ jobs:
           INFO_SUMMARY=$(tail -n 5 renew.log | sed 's/"//g')
         fi
         
-        # 4. 组合最终发送的文本（使用更安全的标准换行拼接方式）
+        # 4. 组合最终发送的文本
         MSG_TEXT=$(cat <<EOF
         ${TITLE}
         
@@ -68,8 +68,8 @@ jobs:
         EOF
         )
         
-        # 5. 发送请求给 TG 机器人（已加入禁用网页预览参数，彻底去除 GitHub 大卡片）
+        # 5. 发送请求给 TG 机器人（使用最新版 Telegram API 规则隐藏网页预览）
         curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TG_ID}" \
           --data-urlencode "text=${MSG_TEXT}" \
-          --data-urlencode "disable_web_preview=true"
+          --data-urlencode "link_preview_options={\"is_disabled\":true}"
