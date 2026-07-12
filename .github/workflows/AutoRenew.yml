@@ -10,23 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 下载仓库代码
     - name: Checkout repository code
       uses: actions/checkout@v4
 
-    # 2. 安装 Python 环境
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    # 3. 安装依赖库
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests
 
-    # 4. 运行续期脚本 (通过 tee 将干净的日志双向输出到屏幕和文件)
     - name: Run renew script
       env:
         MY_EMAIL: ${{ secrets.MY_EMAIL }}
@@ -35,41 +31,37 @@ jobs:
         SCKEY: ${{ secrets.SCKEY }}
       run: python renew.py | tee renew.log
 
-    # 5. 发送 TG 通知 (精准抓取 Python 提取到的到期时间)
     - name: Send Telegram Notification
       if: always()
       env:
         TG_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
         TG_ID: ${{ secrets.TG_USER_ID }}
       run: |
-        # 1. 根据工作流结果设定大标题
         if [ "${{ job.status }}" = "success" ]; then
           TITLE="✅ Freemchost 自动续期成功！"
         else
           TITLE="❌ Freemchost 自动续期失败！"
         fi
         
-        # 2. 核心：从 renew.log 中过滤出包含“服务器名称”、“当前状态”、“到期时间”的行
+        # 抓取干净格式化的三行关键指标
         INFO_SUMMARY=$(grep -E "服务器名称|当前状态|到期时间" renew.log | sed 's/"//g')
         
-        # 3. 如果脚本彻底失败导致日志里没这几行，则抓取日志最后5行兜底
         if [ -z "$INFO_SUMMARY" ]; then
           INFO_SUMMARY=$(tail -n 5 renew.log | sed 's/"//g')
         fi
         
-        # 4. 组合最终发送的文本
+        # 精简后的极简小卡片排版
         MSG_TEXT=$(cat <<EOF
         ${TITLE}
         
-        🔗 详情: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        
-        📊 服务器最新状态:
         ${INFO_SUMMARY}
+        
+        🔗 [查看工作流详情](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
         EOF
         )
         
-        # 5. 发送请求给 TG 机器人（使用最新版 Telegram API 规则隐藏网页预览）
         curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TG_ID}" \
           --data-urlencode "text=${MSG_TEXT}" \
+          --data-urlencode "parse_mode=Markdown" \
           --data-urlencode "link_preview_options={\"is_disabled\":true}"
