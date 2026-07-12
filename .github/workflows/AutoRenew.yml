@@ -68,7 +68,8 @@ jobs:
         EOF
         )
         
-        # 5. 发送请求给 TG 机器人
+        # 5. 发送请求给 TG 机器人（已加入禁用网页预览参数，彻底去除 GitHub 大卡片）
         curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TG_ID}" \
-          --data-urlencode "text=${MSG_TEXT}"
+          --data-urlencode "text=${MSG_TEXT}" \
+          --data-urlencode "disable_web_preview=true"
